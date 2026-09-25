@@ -40,18 +40,18 @@ supplier management beyond a free-text name, NativePHP desktop packaging.
 
 ## 2. Tech stack
 
-| Layer | Choice |
-|---|---|
-| Backend | Laravel 13, PHP 8.4+ |
-| Frontend | React 19 + TypeScript via the official Laravel React starter kit |
-| Bridge | Inertia.js (no separate REST API); Laravel Wayfinder for typed routes |
-| UI | Tailwind CSS, shadcn/ui (Radix) |
-| Charts | Recharts (bundled, works offline) |
-| Database | MySQL (hosted), SQLite (local installs) |
-| Auth | Starter kit session auth; public registration disabled |
-| Tests | Pest |
-| Build | Vite |
-| Dev environment | Laravel Herd + MySQL on Windows |
+| Layer           | Choice                                                                |
+| --------------- | --------------------------------------------------------------------- |
+| Backend         | Laravel 13, PHP 8.4+                                                  |
+| Frontend        | React 19 + TypeScript via the official Laravel React starter kit      |
+| Bridge          | Inertia.js (no separate REST API); Laravel Wayfinder for typed routes |
+| UI              | Tailwind CSS, shadcn/ui (Radix)                                       |
+| Charts          | Recharts (bundled, works offline)                                     |
+| Database        | MySQL (hosted), SQLite (local installs)                               |
+| Auth            | Starter kit session auth; public registration disabled                |
+| Tests           | Pest                                                                  |
+| Build           | Vite                                                                  |
+| Dev environment | Laravel Herd + MySQL on Windows                                       |
 
 ### Cross-cutting rules
 
@@ -76,6 +76,7 @@ Quantities are integers.
 **categories** — `name` (unique).
 
 **products**
+
 - `category_id` (nullable FK)
 - `name`
 - `barcode` (nullable, unique)
@@ -88,11 +89,13 @@ Products are deactivated, never deleted. Inactive products are hidden from check
 search but remain in history and reports.
 
 **customers**
+
 - `name`, `phone` (nullable), `notes` (nullable)
 - `credit_limit` (nullable; null means no limit)
 - `archived_at` (nullable)
 
 **sales**
+
 - `customer_id` (nullable FK; required when `payment_type` = `utang`)
 - `payment_type`: `cash` | `utang`
 - `total`
@@ -100,6 +103,7 @@ search but remain in history and reports.
 - `voided_at` (nullable), `void_reason` (nullable)
 
 **sale_items**
+
 - `sale_id`, `product_id`
 - `product_name`, `unit_price`, `unit_cost` (snapshots at time of sale)
 - `quantity`, `subtotal`
@@ -111,6 +115,7 @@ search but remain in history and reports.
 **restock_items** — `restock_id`, `product_id`, `quantity`, `unit_cost`.
 
 **stock_movements**
+
 - `product_id`
 - `type`: `sale` | `restock` | `adjustment` | `void`
 - `quantity_change` (signed integer)
@@ -143,9 +148,9 @@ Every code path that changes stock goes through an Action that writes both in on
 - Typing a name shows matches; **Enter** adds the top result.
 - Quantities are edited with + / − or by typing; **Delete** removes the selected line.
 - **F2** opens the payment dialog. **Esc** closes dialogs.
-  - **Cash:** enter the amount received; change is displayed prominently.
-  - **Utang:** select an existing customer or quick-add a new one by name. If the sale would push
-    the customer over their `credit_limit`, show a warning. The owner can still proceed.
+    - **Cash:** enter the amount received; change is displayed prominently.
+    - **Utang:** select an existing customer or quick-add a new one by name. If the sale would push
+      the customer over their `credit_limit`, show a warning. The owner can still proceed.
 - **Enter** confirms the sale. On success, the cart clears and focus returns to the scan input.
 - The cart lives entirely in React state. The server is only called on confirm.
 - The Pay button is disabled while the request is in flight, to prevent double submission.
@@ -157,15 +162,15 @@ Input: a list of `{product_id, quantity}`, `payment_type`, `amount_tendered` (ca
 `customer_id` (utang).
 
 1. **Validate** (Form Request):
-   - Cart is not empty; every quantity is at least 1.
-   - Products exist and are active.
-   - Cash: `amount_tendered` ≥ the server-computed total.
-   - Utang: customer is required and not archived.
+    - Cart is not empty; every quantity is at least 1.
+    - Products exist and are active.
+    - Cash: `amount_tendered` ≥ the server-computed total.
+    - Utang: customer is required and not archived.
 2. **Recompute prices from the database.** Never trust client prices.
 3. **In one DB transaction,** with product rows locked for update:
-   - Create the sale and its sale items, with name, price, and cost snapshots.
-   - Decrement stock.
-   - Write a `sale` stock movement per item.
+    - Create the sale and its sale items, with name, price, and cost snapshots.
+    - Decrement stock.
+    - Write a `sale` stock movement per item.
 4. **Stock at or below zero does not block the sale.** Stock may go negative, and the product is
    then flagged "Needs recount". The UI shows a non-blocking warning when adding an item whose
    stock is ≤ 0.
@@ -207,10 +212,10 @@ Input: a list of `{product_id, quantity}`, `payment_type`, `amount_tendered` (ca
 
 - Table with search, category filter, and sorting by name or stock.
 - Stock status badge per product:
-  - **OK:** stock > threshold
-  - **Low:** 0 < stock ≤ threshold
-  - **Out:** stock = 0
-  - **Needs recount:** stock < 0
+    - **OK:** stock > threshold
+    - **Low:** 0 < stock ≤ threshold
+    - **Out:** stock = 0
+    - **Needs recount:** stock < 0
 - Create/edit form: name, category, barcode (scannable into the field), price, cost,
   low-stock threshold. Show a warning (not an error) when price < cost.
 - Duplicate barcodes are rejected by validation.
@@ -271,14 +276,14 @@ All aggregates are computed in the database with sums and group-bys, not by load
 Each business operation is one Action class with one public method. Every action that moves
 money or stock runs in a DB transaction.
 
-| Action | Responsibility |
-|---|---|
-| `CompleteSale` | Checkout (§4) |
-| `VoidSale` | Void a sale, restore stock (§4) |
-| `RecordRestock` | Restock, update costs (§6) |
-| `AdjustStock` | Manual adjustments and recounts (§6) |
+| Action                  | Responsibility                        |
+| ----------------------- | ------------------------------------- |
+| `CompleteSale`          | Checkout (§4)                         |
+| `VoidSale`              | Void a sale, restore stock (§4)       |
+| `RecordRestock`         | Restock, update costs (§6)            |
+| `AdjustStock`           | Manual adjustments and recounts (§6)  |
 | `RecordCustomerPayment` | Utang payment with balance check (§5) |
-| `BackupDatabase` | Local SQLite backup (§10) |
+| `BackupDatabase`        | Local SQLite backup (§10)             |
 
 Controllers only validate (via Form Requests), call an Action, and return an Inertia response.
 Balance and profit calculations live in model query scopes or small query classes so reports
